@@ -12,9 +12,9 @@ See [FORK.md](FORK.md) for the branch layout and the rebase procedure.
 | --- | --- |
 | Upstream base | `68e56cb` (`upstream/main`) |
 | Fork head | tip of `claude/repo-bugs-anki-ui-x47zjy` |
-| Commits ahead | 10 (1 fork-only, 8 upstreamable, 1 doc) |
-| Diff | 46 files, +1031 −90 |
-| Files shared with upstream | 33 (the rest are new files, which cannot conflict) |
+| Commits ahead | 12 (1 fork-only feature, 8 upstreamable fixes, 3 fork docs) |
+| Diff | 47 files, +1057 −90 |
+| Files shared with upstream | 34 (the rest are new files, which cannot conflict) |
 
 Refresh the mechanical numbers above with:
 
@@ -52,7 +52,7 @@ this fork once it lands upstream** — that is how the fork stays small.
 | `9c2922b` | upstreamable | reviewer: revlog time, muted audio, stuck `isPlaying`, nullable card id, stale warning | not submitted |
 | `c93f020` | upstreamable | preferences: dropped disabled action, invalid theme value, order-dependent test | not submitted |
 | `4667abd` | upstreamable | column dialog state, recycled reminder rows, deck provider columns | not submitted |
-| _(tip)_ | fork-only | `FORK.md`, `DIVERGENCE.md` — fork documentation | n/a |
+| _(doc commits)_ | fork-only | `FORK.md`, `DIVERGENCE.md`, and the `CLAUDE.md` soft-fork rules | n/a |
 
 ## File index
 
@@ -105,6 +105,7 @@ drop. Files marked **new** are added by the fork and cannot conflict.
 | `AnkiDroid/src/test/java/com/ichi2/anki/widgets/DeckAdapterTest.kt` | **new** — `46de202` |
 | `AnkiDroid/src/test/java/com/ichi2/anki/preferences/PrefsSearchBarTest.kt` | `c93f020` |
 | `libanki/src/main/java/com/ichi2/anki/libanki/Media.kt` | `4771602` |
+| `CLAUDE.md` | doc commits — adds the soft-fork rules to upstream's file |
 | `FORK.md`, `DIVERGENCE.md` | **new** — fork-only |
 
 Regenerate this mapping with:
