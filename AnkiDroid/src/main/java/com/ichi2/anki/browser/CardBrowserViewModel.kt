@@ -202,6 +202,21 @@ class CardBrowserViewModel(
             }
     }
 
+    /**
+     * Drops the selected rows, and the range-selection anchor, which are no longer in [cards].
+     *
+     * A selection which outlives the rows it refers to means bulk actions — including deleting
+     * notes — operate on rows the user cannot see, and leaves [selectRowsBetween] with an anchor
+     * that is not in the list.
+     */
+    private fun ensureSelectedRowsValid() {
+        lastSelectedId = lastSelectedId?.takeIf { it in cards }
+        if (_selectedRows.isEmpty()) return
+        if (_selectedRows.retainAll { it in cards }) {
+            onRemoveSelectedRows(reason = SingleSelectCause.Other)
+        }
+    }
+
     var cardIdToBeScrolledTo: CardId? = null
         private set
 
@@ -875,8 +890,14 @@ class CardBrowserViewModel(
         start: CardOrNoteId,
         end: CardOrNoteId,
     ) {
-        val startPos = cards.indexOf(start)
         val endPos = cards.indexOf(end)
+        if (endPos == ROW_NOT_FOUND) {
+            Timber.w("range select: the tapped row is not in the result set")
+            return
+        }
+        // `start` is the anchor from a previous tap and may have left the result set since. Select
+        // just the tapped row in that case, rather than handing -1 to `selectRowsBetweenPositions`.
+        val startPos = cards.indexOf(start).takeIf { it != ROW_NOT_FOUND } ?: endPos
 
         selectRowsBetweenPositions(startPos, endPos)
     }
@@ -1399,6 +1420,7 @@ class CardBrowserViewModel(
                     ensureActive()
                     this@CardBrowserViewModel.cards.replaceWith(cardsOrNotes, cards)
                     ensureFocusedRowValid()
+                    ensureSelectedRowsValid()
                     if (isFragmented) flowOfNoteEditorCommand.emit(NoteEditorCommand.fromCurrentSearchState())
                     flowOfSearchState.emit(SearchState.Completed.fromCurrentState(fromUserSearch))
                     selectUnvalidatedRowIds(cardOrNoteIdsToSelect)
@@ -1545,6 +1567,9 @@ class CardBrowserViewModel(
 
         /** Prevents one-shot extras from being re-applied after process death. */
         private const val STATE_LAUNCH_INTENT_CONSUMED = "launchIntentConsumed"
+
+        /** [List.indexOf] result for a row which is not in the current result set. */
+        private const val ROW_NOT_FOUND = -1
 
         const val STATE_MULTISELECT = "multiselect"
         const val STATE_MULTISELECT_VALUES = "multiselect_values"
