@@ -45,6 +45,7 @@ import com.ichi2.anki.observability.ChangeManager
 import com.ichi2.widget.DayRolloverAlarm
 import com.ichi2.widget.WidgetStatus
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
@@ -119,11 +120,15 @@ object DayRolloverHandler : AnkiBroadcastReceiver() {
         this.lastCutoff = currentCutoff
     }
 
-    private fun handleDayRollover() {
+    private suspend fun handleDayRollover() {
         Timber.i("day rollover occurred")
 
         Timber.i("updating study queues")
-        ChangeManager.notifySubscribers(opChanges { studyQueues = true }, initiator = null)
+        // Subscribers update the UI directly, so they must be notified on the main thread. This is
+        // the contract `undoableOp` follows; we are on `Dispatchers.IO` here.
+        withContext(Dispatchers.Main) {
+            ChangeManager.notifySubscribers(opChanges { studyQueues = true }, initiator = null)
+        }
 
         Timber.i("day rollover: updating widgets")
         try {

@@ -308,7 +308,10 @@ fun shouldFetchMedia(): Boolean {
 
 suspend fun monitorMediaSync(deckPicker: DeckPicker) {
     val backend = CollectionManager.getBackend()
-    val scope = CoroutineScope(Dispatchers.IO)
+    // Main, not IO: the loop below touches the dialog and shows snackbars. Doing that off the main
+    // thread throws CalledFromWrongThreadException, which the catch-all turns into a spurious
+    // 'media sync failed' on an otherwise healthy sync.
+    val scope = CoroutineScope(Dispatchers.Main)
     var isAborted = false
 
     val dialog =
@@ -331,7 +334,7 @@ suspend fun monitorMediaSync(deckPicker: DeckPicker) {
         try {
             while (true) {
                 // this will throw if the sync exited with an error
-                val resp = backend.mediaSyncStatus()
+                val resp = withContext(Dispatchers.IO) { backend.mediaSyncStatus() }
                 if (!resp.active) {
                     break
                 }

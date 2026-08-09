@@ -39,6 +39,7 @@ import com.ichi2.anki.observability.ChangeManager
 import com.ichi2.anki.services.AlarmManagerService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.util.Date
 import kotlin.time.Duration.Companion.milliseconds
@@ -60,7 +61,11 @@ class DayRolloverAlarm : AnkiBroadcastReceiver() {
             when (intent.action) {
                 ACTION_ROLLOVER -> {
                     Timber.i("ACTION_ROLLOVER: Updating widgets")
-                    ChangeManager.notifySubscribers(opChanges { studyQueues = true }, initiator = null)
+                    // Subscribers update the UI directly, so they must be notified on the main
+                    // thread. This is the contract `undoableOp` follows; we are on an IO scope.
+                    withContext(Dispatchers.Main) {
+                        ChangeManager.notifySubscribers(opChanges { studyQueues = true }, initiator = null)
+                    }
                     runCatching { WidgetStatus.updateInBackground(context) }.onFailure { Timber.w(it) }
                     scheduleNextInternal(context)
                 }
