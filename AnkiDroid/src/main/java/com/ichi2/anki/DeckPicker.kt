@@ -1490,7 +1490,7 @@ open class DeckPicker :
         outState.putBoolean("mIsFABOpen", floatingActionMenu.isFABOpen)
         importColpkgListener?.let {
             if (it is DatabaseRestorationListener) {
-                outState.getString("dbRestorationPath", it.newAnkiDroidDirectory.absolutePath)
+                outState.putString("dbRestorationPath", it.newAnkiDroidDirectory.absolutePath)
             }
         }
         outState.putSerializable("mediaUsnOnConflict", mediaUsnOnConflict)
@@ -2127,7 +2127,10 @@ open class DeckPicker :
         }
 
         val isEmpty = withCol { decks.cardCount(did, includeSubdecks = true) == 0 }
-        if (!deck?.filtered!! && isEmpty) {
+        // `deck` is null when it isn't in the due tree: the backend hides the default deck while it
+        // is empty, and that deck can be the selected one (deleting a deck reverts the selection to
+        // it). An absent deck is never filtered.
+        if (deck?.filtered != true && isEmpty) {
             showEmptyDeckSnackbar()
             updateUi()
         } else {

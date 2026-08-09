@@ -165,7 +165,12 @@ class DeckAdapter(
         if (node.canCollapse) {
             binding.deckExpander.setOnClickListener {
                 onDeckChildrenToggled(node.did)
-                notifyItemChanged(position) // Ensure UI updates
+                // `position` is stale once rows are inserted or removed above this one without it
+                // being rebound, so ask the holder where it is now.
+                val currentPosition = holder.bindingAdapterPosition
+                if (currentPosition != RecyclerView.NO_POSITION) {
+                    notifyItemChanged(currentPosition) // Ensure UI updates
+                }
             }
         } else {
             binding.deckExpander.isClickable = false

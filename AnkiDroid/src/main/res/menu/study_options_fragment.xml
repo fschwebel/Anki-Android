@@ -7,19 +7,19 @@
     <item
         android:id="@+id/action_schedule_reminders"
         android:title="@string/schedule_reminders_do_not_translate"
-        android:visibility="gone"
+        android:visible="false"
         android:icon="@drawable/ic_notifications"
         ankidroid:showAsAction="always"/>
     <item
         android:id="@+id/action_rebuild"
         tools:title="Rebuild"
-        android:visibility = "gone"
+        android:visible="false"
         android:icon="@drawable/ic_refresh_white"
         ankidroid:showAsAction="ifRoom"/>
     <item
         android:id="@+id/action_empty"
         android:title="@string/empty_cram_label"
-        android:visibility = "gone"
+        android:visible="false"
         android:icon="@drawable/ic_clear_white"
         ankidroid:showAsAction="ifRoom"/>
     <item
@@ -36,5 +36,5 @@
     <item
         android:id="@+id/action_unbury"
         tools:title="Unbury"
-        android:visibility = "gone"/>
+        android:visible="false"/>
 </menu>
