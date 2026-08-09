@@ -12,8 +12,8 @@ See [FORK.md](FORK.md) for the branch layout and the rebase procedure.
 | --- | --- |
 | Upstream base | `68e56cb` (`upstream/main`) |
 | Fork head | tip of `claude/repo-bugs-anki-ui-x47zjy` |
-| Commits ahead | 12 (1 fork-only feature, 8 upstreamable fixes, 3 fork docs) |
-| Diff | 47 files, +1057 −90 |
+| Commits ahead | 13 (1 fork-only feature, 8 upstreamable fixes, 4 fork docs) |
+| Diff | 47 files, +1084 −90 |
 | Files shared with upstream | 34 (the rest are new files, which cannot conflict) |
 
 Refresh the mechanical numbers above with:
@@ -147,7 +147,34 @@ so the loader can mmap it, which sets the floor for any single-ABI APK:
 `enable_languages=false` is read inside upstream's `debug` block but mutates the *global*
 `defaultConfig`, so it applies `resConfigs "en"` to release builds too. `local.properties` is
 gitignored, so this costs no divergence — but it also means an English-only APK is not
-distinguishable from a full one by filename. Label it.
+distinguishable from a full one by filename. Label it. **Only reach for it if the app is genuinely
+English-only**; it is not a size workaround, see below.
+
+### Shipping the APK somewhere with a size limit
+
+Compress the APK for transport; do **not** shrink the app to fit a transport limit.
+
+| | arm64-v8a, all languages |
+| --- | --- |
+| APK | 37.68 MiB |
+| `zip -9` | 18.58 MiB |
+| `xz -9` | 14.04 MiB |
+
+The ratio is this good precisely *because* `librsdroid.so` is stored uncompressed: an outer
+archive gets to compress the 21.7 MiB the APK deliberately leaves raw. Plain `zip` is usually the
+right choice — every desktop OS opens it without extra software.
+
+Rejected alternatives, so they are not re-tried:
+
+- **`useLegacyPackaging = true`** (DEFLATE the `.so` inside the APK, via `packagingOptions.jniLibs`
+  or `android:extractNativeLibs`) would give a ~19 MiB APK, but it makes the *installed* footprint
+  larger — the library is extracted to `/data` instead of being mmap'd from the APK — and slows
+  installs. It also means editing a build file. Not worth it when zipping solves the transport
+  problem for free.
+- **`shrinkResources true`** would save well under a MiB now that R8 already runs, costs build-file
+  divergence, and can strip resources that are only referenced reflectively.
+- **Shrinking `librsdroid.so`** is not available to us: it arrives prebuilt in the
+  `anki-android-backend` AAR, so its Rust codegen flags are upstream's to change, not ours.
 
 Signing uses the checked-in `tools/fallback-release-keystore.jks`, whose password is public. That
 is fine for a personal sideload but means the build is not authenticated to anyone. To use your own
