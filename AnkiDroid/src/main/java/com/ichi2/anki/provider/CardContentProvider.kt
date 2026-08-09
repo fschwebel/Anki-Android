@@ -431,7 +431,16 @@ class CardContentProvider : ContentProvider() {
                 val name = col.decks.name(id)
                 val columns = projection ?: FlashCardsContract.Deck.DEFAULT_PROJECTION
                 val rv = MatrixCursor(columns, 1)
-                val counts = JSONArray(listOf(col.sched.counts()))
+                // `JSONArray(listOf(counts))` wraps the Counts object itself, which serialises as
+                // "[null]". Emit [learn, review, new], matching the DECK_LIST rows.
+                val counts =
+                    col.sched.counts().let {
+                        JSONArray().apply {
+                            put(it.lrn)
+                            put(it.rev)
+                            put(it.new)
+                        }
+                    }
                 addDeckToCursor(id, name, counts, rv, col, columns)
                 rv
             }
@@ -1362,7 +1371,9 @@ class CardContentProvider : ContentProvider() {
                 }
                 FlashCardsContract.Deck.DECK_DYN -> rb.add(col.decks.isFiltered(id))
                 FlashCardsContract.Deck.DECK_DESC -> {
-                    val desc = col.decks.current().description
+                    // `current()` is the selected deck, not the row being written, so every deck in
+                    // a DECK_LIST query was given the selected deck's description.
+                    val desc = col.decks.getLegacy(id)?.description ?: ""
                     rb.add(desc)
                 }
             }

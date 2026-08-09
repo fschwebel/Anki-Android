@@ -101,10 +101,17 @@ class ScheduleRemindersAdapter(
                 setTextViewStrikethrough(holder.timeTextView, false)
                 setViewHolderColors(holder, activeTextColor, activeTrackColor)
             }
-            is ReviewReminderScope.DeckSpecific ->
+            is ReviewReminderScope.DeckSpecific -> {
+                // These lookups are asynchronous, and the holder may be recycled onto a different
+                // reminder before they return. Writing the result then would label the wrong row.
+                val boundReminder = holder.reminder
+
+                fun isStillBound() = holder.reminder === boundReminder
+
                 retrieveCanUserAccessDeck(scope.did) { isDeckAccessible ->
+                    if (!isStillBound()) return@retrieveCanUserAccessDeck
                     if (isDeckAccessible) {
-                        retrieveDeckNameFromID(scope.did) { holder.deckTextView.text = it }
+                        retrieveDeckNameFromID(scope.did) { if (isStillBound()) holder.deckTextView.text = it }
                         setTextViewStrikethrough(holder.timeTextView, false)
                         setViewHolderColors(holder, activeTextColor, activeTrackColor)
                     } else {
@@ -113,6 +120,7 @@ class ScheduleRemindersAdapter(
                         setViewHolderColors(holder, inactiveTextColor, inactiveTrackColor)
                     }
                 }
+            }
         }
     }
 

@@ -100,6 +100,10 @@ class BrowserColumnSelectionFragment : DialogFragment(R.layout.dialog_browser_co
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
+        // `columnAdapter` is assigned by `setupRecyclerView`, which runs asynchronously on first
+        // open. Saving state before it lands would throw UninitializedPropertyAccessException;
+        // there is nothing to save in that case anyway.
+        if (!::columnAdapter.isInitialized) return
         outState.putParcelableArrayList(STATE_ACTIVE, columnAdapter.displayed.toCollection(ArrayList()))
         outState.putParcelableArrayList(STATE_AVAILABLE, columnAdapter.available.toCollection(ArrayList()))
     }
@@ -110,7 +114,16 @@ class BrowserColumnSelectionFragment : DialogFragment(R.layout.dialog_browser_co
     ) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (savedInstanceState == null) {
+        fun getSavedList(key: String) =
+            savedInstanceState?.let { BundleCompat.getParcelableArrayList(it, key, ColumnWithSample::class.java) }
+
+        val savedActive = getSavedList(STATE_ACTIVE)
+        val savedAvailable = getSavedList(STATE_AVAILABLE)
+        // The lists are absent if we were recreated before the initial load finished, in which case
+        // there is nothing to restore and the load has to be started again.
+        if (savedActive != null && savedAvailable != null) {
+            setupRecyclerView(savedActive, savedAvailable)
+        } else {
             launchCatchingTask {
                 val (active, available) =
                     withProgress {
@@ -118,9 +131,6 @@ class BrowserColumnSelectionFragment : DialogFragment(R.layout.dialog_browser_co
                     }
                 setupRecyclerView(active, available)
             }
-        } else {
-            fun getSavedList(key: String) = BundleCompat.getParcelableArrayList(savedInstanceState, key, ColumnWithSample::class.java)!!
-            setupRecyclerView(getSavedList(STATE_ACTIVE), getSavedList(STATE_AVAILABLE))
         }
 
         binding.toolbar.setOnMenuItemClickListener { menuItem ->
@@ -130,6 +140,9 @@ class BrowserColumnSelectionFragment : DialogFragment(R.layout.dialog_browser_co
                     if (!hasUnsavedChanges) {
                         Timber.d("no changes to save")
                         dismiss()
+                        // Without returning, the save below also runs on the dismissed dialog and
+                        // can raise a spurious "you must have at least one column" error.
+                        return@setOnMenuItemClickListener true
                     }
 
                     Timber.d("save columns and close")
