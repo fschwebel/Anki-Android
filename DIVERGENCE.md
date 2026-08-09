@@ -130,6 +130,24 @@ Produces `com.ichi2.anki.ng`, labelled `AnkiDroidNG`, minified by R8. **Keep it 
 build ever needs fork-specific configuration, prefer another upstream-provided flag over editing a
 Gradle file, because build files conflict badly.
 
+Verified parallel-installable: every provider authority (`…ng.flashcards`,
+`…ng.apkgfileprovider`, …) and the custom `READ_WRITE_DATABASE` permission derive from
+`${applicationId}`, so nothing collides with the official app. `com.ichi2.anki.provider.spec` is a
+`meta-data` name, not an authority, and does not conflict.
+
+Sizes, and the one lever that matters. `librsdroid.so` is ~21.7 MiB and is *stored uncompressed*
+so the loader can mmap it, which sets the floor for any single-ABI APK:
+
+| Build | arm64-v8a | armeabi-v7a |
+| --- | --- | --- |
+| all languages | 37.7 MiB | 33.9 MiB |
+| English only (`enable_languages=false` in `local.properties`) | 31.5 MiB | 27.4 MiB |
+
+`enable_languages=false` is read inside upstream's `debug` block but mutates the *global*
+`defaultConfig`, so it applies `resConfigs "en"` to release builds too. `local.properties` is
+gitignored, so this costs no divergence — but it also means an English-only APK is not
+distinguishable from a full one by filename. Label it.
+
 Signing uses the checked-in `tools/fallback-release-keystore.jks`, whose password is public. That
 is fine for a personal sideload but means the build is not authenticated to anyone. To use your own
 key, set `KEYSTOREPATH` / `KEYSTOREPWD` / `KEYALIAS` / `KEYPWD` — and do it *before* the first
