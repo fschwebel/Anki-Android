@@ -6,6 +6,7 @@ package com.ichi2.anki.preferences
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bytehamster.lib.preferencesearch.PreferenceItem
 import com.bytehamster.lib.preferencesearch.SearchConfiguration
+import com.ichi2.anki.R
 import com.ichi2.anki.RobolectricTest
 import com.ichi2.anki.common.destinations.PreferencesDestination
 import com.ichi2.testutils.requireAccessibleJavaField
@@ -54,6 +55,12 @@ class PrefsSearchBarTest : RobolectricTest() {
 
         // Check if all indexed XML resIDs lead to the correct fragments on getFragmentFromXmlRes
         for (resId in allResIds) {
+            // Review reminders are not a `SettingsFragment`, so `getFragmentFromXmlRes` does not
+            // handle them by design: `PreferencesFragment.onSearchResultClicked` special-cases the
+            // resource before it consults the map. Whether this resource is indexed at all depends
+            // on a feature flag, which is why this only failed for some test orderings.
+            if (resId == R.xml.preferences_review_reminders) continue
+
             val fragment = getFragmentFromXmlRes(resId)
 
             val resName = targetContext.resources.getResourceName(resId)

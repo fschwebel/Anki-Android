@@ -145,7 +145,11 @@ class AppearanceSettingsFragment : SettingsFragment() {
             appThemePref.entries = resources.getStringArray(R.array.app_theme_labels).drop(1).toTypedArray()
             appThemePref.entryValues = resources.getStringArray(R.array.app_theme_values).drop(1).toTypedArray()
             if (appTheme == AppTheme.FOLLOW_SYSTEM) {
-                appThemePref.value = getString(Themes.currentTheme.entryResId)
+                // `Themes.currentTheme` is a day/night Theme, whose value is not one of
+                // `app_theme_values`. Assigning it here left the preference holding a value the
+                // ListPreference cannot display and `Prefs.appTheme` cannot parse.
+                val resolved = if (Themes.isNightTheme) AppTheme.NIGHT else AppTheme.DAY
+                appThemePref.value = getString(resolved.entryResId)
             }
         }
 

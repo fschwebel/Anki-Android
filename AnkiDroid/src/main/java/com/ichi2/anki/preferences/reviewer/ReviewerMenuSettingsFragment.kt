@@ -99,7 +99,10 @@ class ReviewerMenuSettingsFragment :
 
         val alwaysShowActions = getSubList(1, menuOnlyItemsIndex)
         val menuOnlyActions = getSubList(menuOnlyItemsIndex, disabledItemsIndex)
-        val disabledActions = getSubList(disabledItemsIndex, items.lastIndex)
+        // `subList`'s end is exclusive, and DISABLED is the final section, so this must be
+        // `items.size`. With `lastIndex` the bottom action was dropped from the disabled list and
+        // silently reverted to its default display type on the next launch.
+        val disabledActions = getSubList(disabledItemsIndex, items.size)
 
         repository.setDisplayTypeActions(
             alwaysShowActions = alwaysShowActions,
