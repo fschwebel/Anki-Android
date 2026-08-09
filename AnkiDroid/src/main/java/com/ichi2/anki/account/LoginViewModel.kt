@@ -85,6 +85,11 @@ class LoginViewModel : ViewModel() {
         endpoint: String?,
     ) {
         Timber.i("Logging in")
+        // Callers wait for the *next* terminal value of `loginState`. A previous attempt leaves
+        // `Success`/`Error` in the flow, which would satisfy that wait immediately, so clear it
+        // before the attempt starts. Set outside `launch` so it is visible to any caller which
+        // starts collecting as soon as this method returns.
+        loginState.value = LoginState.Idle
         viewModelScope.launch {
             try {
                 val auth = syncLogin(username, password, endpoint)

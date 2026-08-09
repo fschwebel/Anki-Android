@@ -64,6 +64,9 @@ class LoggedInFragment : Fragment(R.layout.fragment_my_account_logged_in) {
         val toolbar: MaterialToolbar = view.findViewById(R.id.toolbar)
         val activity = requireActivity() as AppCompatActivity
         activity.setSupportActionBar(toolbar)
+        // Without this the callback never runs, and back closes the whole account screen rather
+        // than the 'remove account' web view on top of it.
+        activity.onBackPressedDispatcher.addCallback(viewLifecycleOwner, onRemoveAccountBackCallback)
 
         activity.supportActionBar?.apply {
             title = TR.sentenceCase.ankiWebAccount
