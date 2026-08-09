@@ -21,6 +21,7 @@ import fi.iki.elonen.NanoHTTPD
 import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 import java.io.ByteArrayInputStream
+import java.io.DataInputStream
 
 open class AnkiServer(
     private val postHandler: PostRequestHandler,
@@ -79,7 +80,9 @@ open class AnkiServer(
         fun getSessionBytes(session: IHTTPSession): ByteArray {
             val contentLength = session.headers["content-length"]!!.toInt()
             val bytes = ByteArray(contentLength)
-            session.inputStream.read(bytes, 0, contentLength)
+            // `InputStream.read` is free to return fewer bytes than asked for, which silently
+            // truncates larger request bodies. `readFully` loops until the array is filled.
+            DataInputStream(session.inputStream).readFully(bytes)
             return bytes
         }
     }

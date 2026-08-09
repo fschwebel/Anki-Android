@@ -134,6 +134,11 @@ class AnkiDroidWidgetSmall : AnalyticsWidgetProvider() {
                                         remounted = false
                                         if (mountReceiver != null) {
                                             appContext.unregisterReceiver(mountReceiver)
+                                            // The registration above is guarded by
+                                            // `mountReceiver == null`, so leaving the unregistered
+                                            // receiver in place would stop it ever being
+                                            // re-registered.
+                                            mountReceiver = null
                                         }
                                     } else {
                                         remounted = true

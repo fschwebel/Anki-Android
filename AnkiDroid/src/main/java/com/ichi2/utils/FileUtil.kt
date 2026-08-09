@@ -103,11 +103,14 @@ object FileUtil {
                 Timber.w(e, "internalizeUri() unable to open input stream from content resolver for Uri %s", uri)
                 throw e
             }
-        try {
-            CompatHelper.compat.copyFile(inputStream, internalFile.absolutePath)
-        } catch (e: Exception) {
-            Timber.w(e, "internalizeUri() unable to internalize file from Uri %s to File %s", uri, internalFile.absolutePath)
-            throw e
+        // `copyFile` closes the target but not the source, so close it here
+        inputStream.use {
+            try {
+                CompatHelper.compat.copyFile(it, internalFile.absolutePath)
+            } catch (e: Exception) {
+                Timber.w(e, "internalizeUri() unable to internalize file from Uri %s to File %s", uri, internalFile.absolutePath)
+                throw e
+            }
         }
         return internalFile
     }

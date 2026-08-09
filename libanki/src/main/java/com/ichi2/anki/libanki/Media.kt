@@ -123,7 +123,9 @@ open class Media(
             val matches = pattern.findAll(processedText)
             for (match in matches) {
                 val fname = pattern.extractFilename(match) ?: continue
-                val isLocal = !Regex("(?i)https?|ftp://").containsMatchIn(fname)
+                // The group matters: without it this reads as `(?i)https?` OR `ftp://`, so any
+                // local filename merely containing "http" is treated as a remote URL and dropped.
+                val isLocal = !Regex("(?i)(https?|ftp)://").containsMatchIn(fname)
                 if (isLocal || includeRemote) {
                     files.add(fname)
                 }

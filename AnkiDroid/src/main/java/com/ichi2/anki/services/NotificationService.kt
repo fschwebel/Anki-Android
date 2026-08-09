@@ -35,6 +35,7 @@ import com.ichi2.anki.common.preferences.sharedPrefs
 import com.ichi2.anki.common.utils.ext.allDecksCounts
 import com.ichi2.anki.libanki.Decks
 import com.ichi2.anki.libanki.EpochMilliseconds
+import com.ichi2.anki.libanki.sched.Counts
 import com.ichi2.anki.preferences.PENDING_NOTIFICATIONS_ONLY
 import com.ichi2.anki.reviewreminders.ReviewReminder
 import com.ichi2.anki.reviewreminders.ReviewReminderId
@@ -192,8 +193,12 @@ class NotificationService : AnkiBroadcastReceiver() {
                     is ReviewReminderScope.Global -> withCol { sched.allDecksCounts() }
                     is ReviewReminderScope.DeckSpecific ->
                         withCol {
-                            decks.select(reviewReminder.scope.did)
-                            sched.counts()
+                            // Read the counts out of the deck tree rather than selecting the deck:
+                            // `decks.select` would change which deck the user is on as a side
+                            // effect of a reminder firing in the background.
+                            sched.deckDueTree().find(reviewReminder.scope.did)?.let {
+                                Counts(new = it.newCount, lrn = it.lrnCount, rev = it.revCount)
+                            } ?: Counts()
                         }
                 }
             val dueCardsTotal = dueCardsCount.count()
