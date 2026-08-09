@@ -253,7 +253,10 @@ open class Reviewer :
 
     override fun onResume() {
         when {
-            stopTimerOnAnswer && isDisplayingAnswer -> {}
+            // The visible timer stays stopped, but the card's own timer still has to be
+            // re-anchored, or the time the activity spent in the background is added to the
+            // review time written to the revlog.
+            stopTimerOnAnswer && isDisplayingAnswer -> answerTimer.resumeCardTimerOnly()
             else -> launchCatchingTask { answerTimer.resume() }
         }
         super.onResume()
@@ -1749,7 +1752,9 @@ open class Reviewer :
     }
 
     override val currentCardId: CardId?
-        get() = currentCard!!.id
+        // nullable in the base class for a reason: `currentCard` is null before the first card is
+        // loaded and after the reviewer finishes. `!!` turned every null check into a crash.
+        get() = currentCard?.id
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)

@@ -87,6 +87,9 @@ class TypeAnswer(
     ) {
         combining = true
         correct = null
+        // Belongs to the card being replaced. Without this it survives both the early return below
+        // and the `""` branch, and the previous card's warning is shown on this one.
+        warning = null
         val q = card.question(col)
         val m = PATTERN.matcher(q)
         var clozeIdx = 0

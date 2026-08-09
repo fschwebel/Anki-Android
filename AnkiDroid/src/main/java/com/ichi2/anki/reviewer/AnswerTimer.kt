@@ -135,6 +135,21 @@ class AnswerTimer(
         }
     }
 
+    /**
+     * Restores the card's review-time accounting after [pause], leaving the on-screen timer stopped.
+     *
+     * [pause] only snapshots the elapsed time: [Card.timeTaken] keeps growing with wall-clock time
+     * until [Card.resumeTimer] re-anchors it. A caller which deliberately keeps the visible timer
+     * stopped must still do this, or the time the activity spent in the background is recorded as
+     * review time.
+     */
+    fun resumeCardTimerOnly() {
+        if (!this::currentCard.isInitialized) {
+            return
+        }
+        currentCard.resumeTimer()
+    }
+
     fun setVisibility(visibility: Int) {
         if (!showTimer) {
             return

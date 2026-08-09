@@ -38,6 +38,7 @@ import com.ichi2.anki.libanki.TtsPlayer
 import com.ichi2.anki.reviewer.CardSide
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -119,8 +120,10 @@ class CardMediaPlayer : Closeable {
         private set
 
     suspend fun setEnabled(enabled: Boolean) {
-        if (!enabled) stop()
+        // Assign before suspending in `stop()`. Otherwise a `setEnabled(true)` which lands while
+        // this call is suspended is overwritten when it resumes, leaving audio off for good.
         this.isEnabled = enabled
+        if (!enabled) stop()
     }
 
     @VisibleForTesting
@@ -179,15 +182,29 @@ class CardMediaPlayer : Closeable {
 
     suspend fun playAllForSide(cardSide: CardSide) {
         if (!isEnabled) return
-        playAvTagsJob =
-            playbackMutex.withLock {
-                playAvTagsJob?.cancelAndJoin()
-                scope.launch {
+        playbackMutex.withLock {
+            playAvTagsJob?.cancelAndJoin()
+            trackPlayback(
+                scope.launch(start = CoroutineStart.LAZY) {
                     Timber.i("playing sounds for %s", cardSide)
                     playAllAvTagsInternal(cardSide, isAutomaticPlayback = true)
-                    playAvTagsJob = null
-                }
-            }
+                },
+            )
+        }
+    }
+
+    /**
+     * Publishes [job] as the current playback and clears it once it ends.
+     *
+     * The job is started only after [playAvTagsJob] has been assigned: a job which finished before
+     * the assignment would clear the field first, leaving a completed job in it and [isPlaying]
+     * stuck at `true`.
+     */
+    private fun trackPlayback(job: Job) {
+        playAvTagsJob = job
+        // guarded by identity so a later playback isn't cleared by an earlier one finishing
+        job.invokeOnCompletion { if (playAvTagsJob === job) playAvTagsJob = null }
+        job.start()
     }
 
     suspend fun playOne(tag: AvTag) {
@@ -205,12 +222,12 @@ class CardMediaPlayer : Closeable {
             }
         }
 
-        playAvTagsJob =
-            playbackMutex.withLock {
-                playAvTagsJob?.cancelAndJoin()
-                Timber.i("playing one AV Tag")
+        playbackMutex.withLock {
+            playAvTagsJob?.cancelAndJoin()
+            Timber.i("playing one AV Tag")
 
-                scope.launch {
+            trackPlayback(
+                scope.launch(start = CoroutineStart.LAZY) {
                     try {
                         play(tag)
                     } catch (e: MediaException) {
@@ -224,9 +241,9 @@ class CardMediaPlayer : Closeable {
                         Timber.w(e, "Exception playing AV Tag")
                     }
                     Timber.v("completed playing one AV Tag")
-                    playAvTagsJob = null
-                }
-            }
+                },
+            )
+        }
     }
 
     suspend fun stop() {
