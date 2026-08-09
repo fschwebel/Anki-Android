@@ -154,10 +154,11 @@ class DeckPickerViewModel :
             tree.onlyHasDefaultDeck() && noCards
         }.stateIn(viewModelScope, SharingStarted.Eagerly, initialValue = null)
 
-    val flowOfCardsDue =
+    /** Collection-wide counts shown as the deck picker's subtitle. `null` while unknown. */
+    val flowOfStudyCounts =
         combine(flowOfDeckDueTree, flowOfDeckListInInitialState) { tree, inInitialState ->
             if (tree == null || inInitialState != false) return@combine null
-            tree.newCount + tree.revCount + tree.lrnCount
+            StudyCounts(new = tree.newCount, learn = tree.lrnCount, review = tree.revCount)
         }
 
     /** "Studied N cards in 0 seconds today */
@@ -560,6 +561,8 @@ class DeckPickerViewModel :
      * Fetches the current sync icon state for the menu
      */
     suspend fun fetchSyncIconState(): SyncIconState {
+        // the sync button is hidden entirely in this case: don't hit the network to badge it
+        if (!Prefs.isSyncEnabled) return SyncIconState.Normal
         if (!Prefs.displaySyncStatus) return SyncIconState.Normal
         val auth = syncAuth() ?: return SyncIconState.NotLoggedIn
         return try {

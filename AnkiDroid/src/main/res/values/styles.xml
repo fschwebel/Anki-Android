@@ -231,6 +231,22 @@
         <item name="android:windowBackground">?android:attr/colorBackground</item>
     </style>
 
+    <!-- A 'New'/'Learn'/'Due' label above the deck list. Shares
+         `deck_picker_count_column_width` with the counts in `item_deck.xml` so that each label sits
+         above its own column. -->
+    <style name="Widget.AnkiDroid.DeckListColumnHeader" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minWidth">@dimen/deck_picker_count_column_width</item>
+        <item name="android:gravity">center</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.06</item>
+    </style>
+
     <style name="TextAppearance.AnkiDroid.TopAppBar.Title" parent="TextAppearance.Material3.TitleMedium" />
 
     <style name="TextAppearance.AnkiDroid.TopAppBar.Subtitle" parent="TextAppearance.Material3.ActionBar.Subtitle" />

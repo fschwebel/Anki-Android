@@ -18,6 +18,7 @@ package com.ichi2.anki.preferences
 import androidx.appcompat.app.AlertDialog
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
+import androidx.preference.SwitchPreferenceCompat
 import com.google.android.material.snackbar.Snackbar
 import com.ichi2.anki.CollectionManager.TR
 import com.ichi2.anki.CollectionManager.withCol
@@ -47,6 +48,13 @@ class SyncSettingsFragment : SettingsFragment() {
 
         // Enable/disable one-way sync if the user is logged in
         updateOneWaySyncEnabledState()
+
+        // 'One-way sync' can't use `android:dependency` as its enabled state also depends on
+        // whether the user is logged in, so react to the master switch here instead.
+        requirePreference<SwitchPreferenceCompat>(R.string.sync_enabled_key).setOnPreferenceChangeListener { _, newValue ->
+            updateOneWaySyncEnabledState(syncEnabled = newValue as Boolean)
+            true
+        }
 
         // Configure 'Network timeout'
         // TODO: add 'reset to default' functionality
@@ -100,9 +108,9 @@ class SyncSettingsFragment : SettingsFragment() {
             Prefs.username.ifNullOrEmpty { getString(R.string.sync_account_summ_logged_out) }
     }
 
-    private fun updateOneWaySyncEnabledState() {
+    private fun updateOneWaySyncEnabledState(syncEnabled: Boolean = Prefs.isSyncEnabled) {
         val isLoggedIn = !Prefs.username.isNullOrEmpty()
-        requirePreference<Preference>(R.string.one_way_sync_key).isEnabled = isLoggedIn
+        requirePreference<Preference>(R.string.one_way_sync_key).isEnabled = isLoggedIn && syncEnabled
     }
 
     // TODO trigger the summary change from MyAccount.kt once it is migrated to a fragment

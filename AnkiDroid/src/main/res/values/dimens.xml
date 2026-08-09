@@ -27,6 +27,9 @@
     <dimen name="deck_picker_left_padding_small">0dp</dimen>
     <dimen name="deck_picker_left_padding">24dp</dimen>
     <dimen name="deck_picker_right_padding">4dp</dimen>
+    <!-- Width of a single new/learn/due column in the deck list. The counts and the column
+         headers share it so that the numbers line up vertically down the list. -->
+    <dimen name="deck_picker_count_column_width">44dp</dimen>
     <dimen name="note_editor_toolbar_height">52dp</dimen>
 
     <dimen name="mtrl_snackbar_background_corner_radius">8dp</dimen>

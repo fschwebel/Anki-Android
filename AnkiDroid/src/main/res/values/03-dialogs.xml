@@ -185,12 +185,10 @@
         <item quantity="other" comment="Consider keeping the unbreakable space after the digit">An automatic sync may be triggered in %d&#160;seconds</item>
     </plurals>
     <string name="metered_sync_data_warning">Your internet provider may charge money for data use</string>
-    <string name="deck_picker_new">Number of new cards to see today in this deck.</string>
-    <string name="deck_picker_rev">Number of cards due today in this deck.</string>
-    <string name="deck_picker_lrn">Number of cards in learning in this deck.</string> <!-- This description is valid fos
-    sched V2. For V1, it was counting the number of repetitions of cards in learning. This approximation is acceptable
-    for the sake of simplicity and because V1 will leave.-->
+    <!-- The individual counts are no longer described one-by-one: `deck_picker_counts_description`
+    announces all three at once, so a screen reader reads the row in a single stop. -->
     <string name="deck_picker_counts">Open the deck overview page containing the number of cards to see today.</string>
+    <string name="deck_picker_counts_description" comment="Accessibility description read out for a deck's three counts. %1$d: new cards, %2$d: cards in learning, %3$d: cards due for review">%1$d new, %2$d learning, %3$d due</string>
 
     <string name="import_deck_package">Deck package (.apkg)</string>
     <string name="import_collection_package">Collection package (.colpkg)</string>

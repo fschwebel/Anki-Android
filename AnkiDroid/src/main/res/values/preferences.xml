@@ -16,6 +16,7 @@
     <string name="double_tap_timeout_pref_key">doubleTapTimeout</string>
     <!-- Sync -->
     <string name="pref_sync_screen_key">syncScreen</string>
+    <string name="sync_enabled_key">syncEnabled</string>
     <string name="sync_account_key">syncAccount</string>
     <string name="sync_fetch_media_key">syncFetchMedia</string>
     <string name="sync_io_timeout_secs_key">syncIoTimeoutSecs</string>

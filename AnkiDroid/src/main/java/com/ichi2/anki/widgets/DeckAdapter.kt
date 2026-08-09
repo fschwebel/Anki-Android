@@ -24,6 +24,8 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import androidx.core.content.res.getDrawableOrThrow
 import androidx.core.content.withStyledAttributes
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
 import androidx.core.view.isGone
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
@@ -194,6 +196,23 @@ class DeckAdapter(
         binding.deckLearn.setTextColor(if (node.lrnCount == 0) zeroCountColor else learnCountColor)
         binding.deckReview.text = node.revCount.toString()
         binding.deckReview.setTextColor(if (node.revCount == 0) zeroCountColor else reviewCountColor)
+
+        // The counts are three bare numbers on screen: their meaning comes from the column headers
+        // above the list, which a screen reader user never reaches. Spell them out instead, and
+        // describe what tapping them does as an action label rather than as part of the description.
+        binding.countsLayout.contentDescription =
+            binding.root.context.getString(
+                R.string.deck_picker_counts_description,
+                node.newCount,
+                node.lrnCount,
+                node.revCount,
+            )
+        ViewCompat.replaceAccessibilityAction(
+            binding.countsLayout,
+            AccessibilityActionCompat.ACTION_CLICK,
+            binding.root.context.getString(R.string.deck_picker_counts),
+            null,
+        )
 
         holder.binding.deckLayout.setOnClickListener { onDeckSelected(node.did) }
         holder.binding.deckLayout.setOnLongClickListener {

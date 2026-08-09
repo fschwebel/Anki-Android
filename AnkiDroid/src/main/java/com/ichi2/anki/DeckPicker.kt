@@ -121,7 +121,9 @@ import com.ichi2.anki.deckpicker.DeckPickerViewModel.StartupResponse
 import com.ichi2.anki.deckpicker.EmptyCardsResult
 import com.ichi2.anki.deckpicker.OptionsMenuState
 import com.ichi2.anki.deckpicker.ShortcutData
+import com.ichi2.anki.deckpicker.StudyCounts
 import com.ichi2.anki.deckpicker.SyncIconState
+import com.ichi2.anki.deckpicker.toSubtitle
 import com.ichi2.anki.dialogs.AsyncDialogFragment
 import com.ichi2.anki.dialogs.BackupPromptDialog
 import com.ichi2.anki.dialogs.CreateDeckDialog
@@ -530,6 +532,11 @@ open class DeckPicker :
         deckPickerBinding.deckPickerContent.visibility = View.GONE
         deckPickerBinding.noDecksPlaceholder.visibility = View.GONE
 
+        // Name the deck list's count columns using Anki's own deck list terminology
+        deckPickerBinding.deckListHeaderNew.text = TR.statisticsCountsNewCards()
+        deckPickerBinding.deckListHeaderLearn.text = TR.decksLearnHeader()
+        deckPickerBinding.deckListHeaderDue.text = TR.decksReviewHeader()
+
         // specify a LinearLayoutManager for the RecyclerView
         decksLayoutManager = LinearLayoutManager(this)
         deckPickerBinding.decks.layoutManager = decksLayoutManager
@@ -695,10 +702,12 @@ open class DeckPicker :
                     pullToSyncWrapper.isRefreshing = false
                     sync()
                 }
+                isEnabled = Prefs.isSyncEnabled
             }
         // Only allow pull-to-sync when the deck list is scrolled to the top.
         deckPickerBinding.decks.doOnScrolled { _, _ ->
-            pullToSyncWrapper.isEnabled = decksLayoutManager.findFirstCompletelyVisibleItemPosition() == 0
+            pullToSyncWrapper.isEnabled =
+                Prefs.isSyncEnabled && decksLayoutManager.findFirstCompletelyVisibleItemPosition() == 0
         }
     }
 
@@ -791,14 +800,9 @@ open class DeckPicker :
             binding.resizingDivider?.isVisible = isVisible
         }
 
-        fun onCardsDueChanged(dueCount: Int?) {
-            if (dueCount == null) {
-                supportActionBar?.subtitle = null
-                return
-            }
-
+        fun onStudyCountsChanged(counts: StudyCounts?) {
             supportActionBar?.apply {
-                subtitle = if (dueCount == 0) null else resources.getQuantityString(R.plurals.widget_cards_due, dueCount, dueCount)
+                subtitle = counts?.toSubtitle(resources)
                 val toolbar = findViewById<Toolbar>(R.id.toolbar)
                 TooltipCompat.setTooltipText(toolbar, toolbar.subtitle)
             }
@@ -888,7 +892,7 @@ open class DeckPicker :
         viewModel.flowOfOptionsMenuState.filterNotNull().launchCollectionInLifecycleScope(::onOptionsMenuUpdated)
         viewModel.flowOfStudiedTodayStats.launchCollectionInLifecycleScope(::onStudiedTodayChanged)
         viewModel.flowOfDeckListInInitialState.filterNotNull().launchCollectionInLifecycleScope(::onCollectionStatusChanged)
-        viewModel.flowOfCardsDue.launchCollectionInLifecycleScope(::onCardsDueChanged)
+        viewModel.flowOfStudyCounts.launchCollectionInLifecycleScope(::onStudyCountsChanged)
         viewModel.flowOfCollectionHasNoCards.launchCollectionInLifecycleScope(::onStudyOptionsVisibilityChanged)
         viewModel.flowOfDeckList.launchCollectionInLifecycleScope(::onDeckListChanged)
         viewModel.flowOfFocusedDeck.launchCollectionInLifecycleScope(::onFocusedDeckChanged)
@@ -1178,6 +1182,12 @@ open class DeckPicker :
         syncMediaProgressJob?.cancel()
 
         val syncItem = menu.findItem(R.id.action_sync)
+        // The single place which decides whether the toolbar has a sync button at all.
+        syncItem.isVisible = Prefs.isSyncEnabled
+        if (!syncItem.isVisible) {
+            Timber.d("Sync is disabled: hiding the sync button")
+            return
+        }
         val progressIndicator =
             syncItem.actionView
                 ?.findViewById<LinearProgressIndicator>(R.id.progress_indicator)
@@ -1287,6 +1297,7 @@ open class DeckPicker :
         menuItem: MenuItem,
         state: OptionsMenuState,
     ) {
+        if (!menuItem.isVisible) return
         val provider =
             MenuItemCompat.getActionProvider(menuItem) as? SyncActionProvider
                 ?: return
@@ -1456,7 +1467,7 @@ open class DeckPicker :
 
     fun refreshState() {
         // Due to the App Introduction, this may be called before permission has been granted.
-        if (syncOnResume && hasCollectionStoragePermissions()) {
+        if (syncOnResume && hasCollectionStoragePermissions() && Prefs.isSyncEnabled) {
             syncOnResume = false
             Timber.i("Performing Sync on Resume")
             Permissions.requestNotificationPermissionsForSyncing(this)
@@ -1465,6 +1476,10 @@ open class DeckPicker :
             selectNavigationItem(R.id.nav_decks)
             updateDeckList()
             title = resources.getString(R.string.app_name)
+        }
+        // The sync setting may have been toggled in the preferences we're returning from.
+        if (::pullToSyncWrapper.isInitialized) {
+            pullToSyncWrapper.isEnabled = Prefs.isSyncEnabled
         }
         // Update sync status (if we've come back from a screen)
         invalidateOptionsMenu()
@@ -1534,6 +1549,7 @@ open class DeckPicker :
             (TimeManager.time.intTimeMS() - Prefs.lastSyncTime) > AUTOMATIC_SYNC_MINIMAL_INTERVAL.inWholeMilliseconds
 
         when {
+            !Prefs.isSyncEnabled -> Timber.d("autoSync: sync is disabled")
             !Prefs.isAutoSyncEnabled -> Timber.d("autoSync: not enabled")
             MeteredSyncPolicy.shouldBlock() -> Timber.d("autoSync: blocked by metered connection")
             !NetworkUtils.isOnline -> Timber.d("autoSync: offline")
@@ -1942,6 +1958,13 @@ open class DeckPicker :
      * from the mSyncConflictResolutionListener if the first attempt determines that a full-sync is required.
      */
     override fun sync(conflict: ConflictResolution?) {
+        if (!Prefs.isSyncEnabled) {
+            // Nothing should be able to reach this: every entry point is hidden or gated. Bail out
+            // rather than prompting a user who has opted out of AnkiWeb to log in.
+            Timber.i("sync() called while sync is disabled")
+            pullToSyncWrapper.isRefreshing = false
+            return
+        }
         val hkey = Prefs.hkey
         if (hkey.isNullOrEmpty()) {
             Timber.w("User not logged in")

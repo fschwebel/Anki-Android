@@ -53,51 +53,59 @@
             tools:text="Deck name" />
     </LinearLayout>
 
+    <!-- The three counts are laid out in equally sized columns which match the widths used by the
+         `deck_list_header` in `include_deck_picker.xml`, so the numbers line up down the list and
+         under their header. `minWidth` rather than a fixed width so that unusually large counts
+         grow the column instead of being clipped. -->
     <LinearLayout
         android:id="@+id/counts_layout"
-        android:contentDescription="@string/deck_picker_counts"
         android:background="?attr/selectableItemBackground"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:minHeight="48dp"
-        android:minWidth="70dp"
-        android:gravity="end"
+        android:gravity="end|center_vertical"
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true" >
         <com.ichi2.ui.FixedTextView
             android:id="@+id/deck_new"
-            android:contentDescription="@string/deck_picker_new"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_gravity="center_vertical"
+            android:minWidth="@dimen/deck_picker_count_column_width"
             android:background="@color/transparent"
+            android:fontFeatureSettings="tnum"
             android:gravity="center"
-            android:paddingEnd="5dip"
-            android:textSize="14sp"
+            android:importantForAccessibility="no"
+            android:maxLines="1"
+            android:textSize="16sp"
             tools:text="10" />
 
         <com.ichi2.ui.FixedTextView
             android:id="@+id/deck_learn"
-            android:contentDescription="@string/deck_picker_lrn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_gravity="center_vertical"
+            android:minWidth="@dimen/deck_picker_count_column_width"
             android:background="@color/transparent"
+            android:fontFeatureSettings="tnum"
             android:gravity="center"
-            android:paddingEnd="5dip"
-            android:textSize="14sp"
+            android:importantForAccessibility="no"
+            android:maxLines="1"
+            android:textSize="16sp"
             tools:text="42" />
 
         <com.ichi2.ui.FixedTextView
             android:id="@+id/deck_review"
-            android:contentDescription="@string/deck_picker_rev"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginEnd="6dip"
+            android:layout_gravity="center_vertical"
+            android:minWidth="@dimen/deck_picker_count_column_width"
             android:background="@color/transparent"
+            android:fontFeatureSettings="tnum"
             android:gravity="center"
-            android:textSize="14sp"
+            android:importantForAccessibility="no"
+            android:maxLines="1"
+            android:textSize="16sp"
             tools:text="13" />
     </LinearLayout>
 </RelativeLayout>

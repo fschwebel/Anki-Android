@@ -2,6 +2,7 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -31,10 +32,45 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
+                    <!-- Names the three count columns of the deck list below. Each label is the same
+                         width as the column it sits above, and the paddings match `item_deck.xml`. -->
+                    <LinearLayout
+                        android:id="@+id/deck_list_header"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:gravity="end|center_vertical"
+                        android:importantForAccessibility="no"
+                        android:orientation="horizontal"
+                        android:paddingStart="@dimen/deck_picker_left_padding"
+                        android:paddingTop="8dp"
+                        android:paddingEnd="@dimen/deck_picker_right_padding"
+                        android:paddingBottom="2dp">
+
+                        <com.ichi2.ui.FixedTextView
+                            android:id="@+id/deck_list_header_new"
+                            style="@style/Widget.AnkiDroid.DeckListColumnHeader"
+                            android:textColor="?attr/newCountColor"
+                            tools:text="New" />
+
+                        <com.ichi2.ui.FixedTextView
+                            android:id="@+id/deck_list_header_learn"
+                            style="@style/Widget.AnkiDroid.DeckListColumnHeader"
+                            android:textColor="?attr/learnCountColor"
+                            tools:text="Learn" />
+
+                        <com.ichi2.ui.FixedTextView
+                            android:id="@+id/deck_list_header_due"
+                            style="@style/Widget.AnkiDroid.DeckListColumnHeader"
+                            android:textColor="?attr/reviewCountColor"
+                            tools:text="Due" />
+                    </LinearLayout>
+
                     <com.ichi2.anki.ui.BottomFadeFrameLayout
                         android:id="@+id/decks_fade_wrapper"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent">
+                        android:layout_height="match_parent"
+                        android:layout_below="@id/deck_list_header">
 
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/decks"

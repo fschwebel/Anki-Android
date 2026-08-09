@@ -20,13 +20,23 @@
     android:title="@string/pref_cat_sync"
     android:key="@string/pref_sync_screen_key"
     xmlns:tools="http://schemas.android.com/tools">
+    <!-- Master switch. Everything below depends on it, and turning it off also removes the sync
+         button, its badge, pull-to-sync and the sync prompts from the rest of the app. -->
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="@string/sync_enabled_key"
+        android:summaryOff="@string/sync_enabled_summ_off"
+        android:summaryOn="@string/sync_enabled_summ_on"
+        android:title="@string/sync_enabled" />
     <Preference
+        android:dependency="@string/sync_enabled_key"
         android:key="@string/sync_account_key"
         android:summary="@string/sync_account_summ_logged_out"
         tools:title="AnkiWeb account" >
     </Preference>
     <ListPreference
         android:defaultValue="@string/sync_media_always_value"
+        android:dependency="@string/sync_enabled_key"
         android:entries="@array/sync_media_entries"
         android:entryValues="@array/sync_media_values"
         android:key="@string/sync_fetch_media_key"
@@ -34,16 +44,19 @@
         app:useSimpleSummaryProvider="true"/>
     <SwitchPreferenceCompat
         android:defaultValue="false"
+        android:dependency="@string/sync_enabled_key"
         android:key="@string/automatic_sync_choice_key"
         android:summary="@string/automatic_sync_choice_summ"
         android:title="@string/automatic_sync_choice" />
     <SwitchPreferenceCompat
         android:defaultValue="true"
+        android:dependency="@string/sync_enabled_key"
         android:key="@string/sync_status_badge_key"
         android:summary="@string/sync_status_badge_summ"
         android:title="@string/sync_status_badge" />
     <SwitchPreferenceCompat
         android:defaultValue="false"
+        android:dependency="@string/sync_enabled_key"
         android:key="@string/metered_sync_key"
         android:title="@string/metered_sync_title"
         android:summary="@string/metered_sync_summary" />
@@ -58,6 +71,7 @@
         <com.ichi2.preferences.IncrementerNumberRangePreferenceCompat
             android:key="@string/sync_io_timeout_secs_key"
             android:defaultValue="60"
+            android:dependency="@string/sync_enabled_key"
             app:min="30"
             app:max="99999"
             tools:title="Network timeout" />
@@ -71,6 +85,7 @@
             tools:summary="On next sync, force changes in one direction" />
         <!-- This is ignored in the search as it opens a submenu. The submenu content is what should actually appear in search result. -->
         <Preference
+            android:dependency="@string/sync_enabled_key"
             android:key="@string/custom_sync_server_key"
             android:title="@string/custom_sync_server_title"
             android:fragment="com.ichi2.anki.preferences.CustomSyncServerSettingsFragment"

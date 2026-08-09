@@ -20,12 +20,14 @@ package com.ichi2.anki.introduction
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.View
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResult
 import com.ichi2.anki.R
 import com.ichi2.anki.databinding.FragmentIntroductionBinding
 import com.ichi2.anki.introduction.SetupCollectionFragment.CollectionSetupOption.DeckPickerWithNewCollection
 import com.ichi2.anki.introduction.SetupCollectionFragment.CollectionSetupOption.SyncFromExistingAccount
+import com.ichi2.anki.settings.Prefs
 import dev.androidbroadcast.vbpd.viewBinding
 import kotlinx.parcelize.Parcelize
 
@@ -51,6 +53,8 @@ class SetupCollectionFragment : Fragment(R.layout.fragment_introduction) {
         super.onViewCreated(view, savedInstanceState)
 
         binding.getStarted.setOnClickListener { setResult(DeckPickerWithNewCollection) }
+        // Don't offer AnkiWeb to a user who has turned sync off
+        binding.syncProfile.isVisible = Prefs.isSyncEnabled
         binding.syncProfile.setOnClickListener { setResult(SyncFromExistingAccount) }
     }
 

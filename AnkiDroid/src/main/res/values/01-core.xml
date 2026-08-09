@@ -29,6 +29,18 @@
     <string name="collapse" comment="In the deck picker: accessibility label of the buttons that hide the subdecks of a deck.">Collapse</string>
     <string name="no_cards_placeholder_title" comment="Text shown the first time AnkiDroid is opened, to explain to the user why they can't yet review.">Collection is empty</string>
     <string name="no_cards_placeholder_description" comment="Text shown the first time AnkiDroid is opened, to explain what should be their first action.">Start adding cards\nusing the + icon.</string>
+    <plurals name="deck_picker_summary_new" comment="Part of the deck picker subtitle summarising the whole collection, e.g. '31 new · 4 learning · 57 due'.">
+        <item quantity="one">%d new</item>
+        <item quantity="other">%d new</item>
+    </plurals>
+    <plurals name="deck_picker_summary_learning" comment="Part of the deck picker subtitle summarising the whole collection, e.g. '31 new · 4 learning · 57 due'.">
+        <item quantity="one">%d learning</item>
+        <item quantity="other">%d learning</item>
+    </plurals>
+    <plurals name="deck_picker_summary_due" comment="Part of the deck picker subtitle summarising the whole collection. 'due' means review cards scheduled for today, e.g. '31 new · 4 learning · 57 due'.">
+        <item quantity="one">%d due</item>
+        <item quantity="other">%d due</item>
+    </plurals>
 
     <!-- Reviewer -->
     <plurals name="reviewer_window_title" comment="Header of the reviewer, telling the users how many minutes remains before they have seen all cards.">

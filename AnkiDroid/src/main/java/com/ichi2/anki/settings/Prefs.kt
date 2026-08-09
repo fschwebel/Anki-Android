@@ -243,6 +243,16 @@ open class PrefsRepository(
 
     // ****************************************** Sync ****************************************** //
 
+    /**
+     * Master switch for the whole AnkiWeb sync feature.
+     *
+     * When off, no sync is ever started and every piece of sync UI is hidden: the toolbar's sync
+     * button and its 'not logged in' badge, pull-to-sync, the automatic sync on app start/exit, and
+     * the 'Sync from AnkiWeb' option in the app introduction. Intended for users who study offline
+     * and don't want to be prompted to create an account.
+     */
+    val isSyncEnabled by booleanPref(R.string.sync_enabled_key, defaultValue = true)
+
     val isAutoSyncEnabled by booleanPref(R.string.automatic_sync_choice_key, false)
     val displaySyncStatus by booleanPref(R.string.sync_status_badge_key, defaultValue = true)
     var allowSyncOnMeteredConnections by booleanPref(R.string.metered_sync_key, defaultValue = false)
