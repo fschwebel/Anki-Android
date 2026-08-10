@@ -10,9 +10,9 @@ See [FORK.md](FORK.md) for the branch layout and the rebase procedure.
 
 | | |
 | --- | --- |
-| Upstream base | `68e56cb` — the merge base, not necessarily current `upstream/main` |
+| Upstream base | `c7158f0` — the merge base, not necessarily current `upstream/main` |
 | Fork head | tip of `claude/repo-bugs-anki-ui-x47zjy` |
-| Commits ahead | 14 (1 fork-only feature, 8 upstreamable fixes, 4 fork docs, 1 CI) |
+| Commits ahead | 15 (1 fork-only feature, 8 upstreamable fixes, 5 fork docs, 1 CI) |
 | Diff | 50 files, +1301 −90 |
 | Files shared with upstream | 42 of those 50 (the other 8 are new files, which cannot conflict) |
 
@@ -48,15 +48,15 @@ this fork once it lands upstream** — that is how the fork stays small.
 
 | Commit | Kind | Change | Upstream status |
 | --- | --- | --- | --- |
-| `46de202` | fork-only | AnkiWeb sync kill-switch + deck list count columns | n/a |
-| `ffde833` | upstreamable | account: login retry state, remove-account back press, logout resync scope | not submitted |
-| `a869b66` | upstreamable | deck picker: saved restore path, Default-deck NPE, menu `visibility`, stale row index | not submitted |
-| `b2d58ba` | upstreamable | browser: prune selection and range-select anchor when results are replaced | not submitted |
-| `a34a2a9` | upstreamable | main-thread UI in media sync and day rollover | not submitted |
-| `4771602` | upstreamable | reminder deck side effect, truncated POSTs, stream/receiver leaks, media regex | not submitted |
-| `9c2922b` | upstreamable | reviewer: revlog time, muted audio, stuck `isPlaying`, nullable card id, stale warning | not submitted |
-| `c93f020` | upstreamable | preferences: dropped disabled action, invalid theme value, order-dependent test | not submitted |
-| `4667abd` | upstreamable | column dialog state, recycled reminder rows, deck provider columns | not submitted |
+| `6e6580e` | fork-only | AnkiWeb sync kill-switch + deck list count columns | n/a |
+| `55c4a2a` | upstreamable | account: login retry state, remove-account back press, logout resync scope | not submitted |
+| `be110f2` | upstreamable | deck picker: saved restore path, Default-deck NPE, menu `visibility`, stale row index | not submitted |
+| `c5b4283` | upstreamable | browser: prune selection and range-select anchor when results are replaced | not submitted |
+| `d1785b5` | upstreamable | main-thread UI in media sync and day rollover | not submitted |
+| `0da2e6f` | upstreamable | reminder deck side effect, truncated POSTs, stream/receiver leaks, media regex | not submitted |
+| `15e0088` | upstreamable | reviewer: revlog time, muted audio, stuck `isPlaying`, nullable card id, stale warning | not submitted |
+| `37b6e6e` | upstreamable | preferences: dropped disabled action, invalid theme value, order-dependent test | not submitted |
+| `ae4a80b` | upstreamable | column dialog state, recycled reminder rows, deck provider columns | not submitted |
 | _(doc commits)_ | fork-only | `FORK.md`, `DIVERGENCE.md`, and the `CLAUDE.md` soft-fork rules | n/a |
 | _(ci commit)_ | fork-only | upstream-sync + rebase-check workflows, and a fork guard on `stale.yml` | n/a |
 
@@ -67,50 +67,50 @@ drop. Files marked **new** are added by the fork and cannot conflict.
 
 | File | Commit(s) |
 | --- | --- |
-| `AnkiDroid/src/main/java/com/ichi2/anki/DeckPicker.kt` | `46de202`, `a869b66` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/Reviewer.kt` | `9c2922b` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/Sync.kt` | `a34a2a9` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/DayRolloverHandler.kt` | `a34a2a9` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/account/LoggedInFragment.kt` | `ffde833` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/account/LoggedInViewModel.kt` | `ffde833` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/account/LoginViewModel.kt` | `ffde833` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/analytics/AnalyticsConstants.kt` | `46de202` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/browser/BrowserColumnSelectionFragment.kt` | `4667abd` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/browser/CardBrowserViewModel.kt` | `b2d58ba` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/cardviewer/CardMediaPlayer.kt` | `9c2922b` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/cardviewer/TypeAnswer.kt` | `9c2922b` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/deckpicker/DeckPickerViewModel.kt` | `46de202` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/deckpicker/StudyCounts.kt` | **new** — `46de202` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/introduction/SetupCollectionFragment.kt` | `46de202` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/pages/AnkiServer.kt` | `4771602` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/preferences/AppearanceSettingsFragment.kt` | `c93f020` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/preferences/SyncSettingsFragment.kt` | `46de202` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/preferences/reviewer/ReviewerMenuSettingsFragment.kt` | `c93f020` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/provider/CardContentProvider.kt` | `4667abd` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/reviewer/AnswerTimer.kt` | `9c2922b` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/reviewreminders/ScheduleRemindersAdapter.kt` | `4667abd` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/services/NotificationService.kt` | `4771602` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/settings/Prefs.kt` | `46de202` |
-| `AnkiDroid/src/main/java/com/ichi2/anki/widgets/DeckAdapter.kt` | `46de202`, `a869b66` |
-| `AnkiDroid/src/main/java/com/ichi2/utils/FileUtil.kt` | `4771602` |
-| `AnkiDroid/src/main/java/com/ichi2/widget/AnkiDroidWidgetSmall.kt` | `4771602` |
-| `AnkiDroid/src/main/java/com/ichi2/widget/DayRolloverAlarm.kt` | `a34a2a9` |
-| `AnkiDroid/src/main/res/layout/include_deck_picker.xml` | `46de202` |
-| `AnkiDroid/src/main/res/layout/item_deck.xml` | `46de202` |
-| `AnkiDroid/src/main/res/menu/study_options_fragment.xml` | `a869b66` |
-| `AnkiDroid/src/main/res/values-sw600dp/dimens.xml` | `46de202` |
-| `AnkiDroid/src/main/res/values/01-core.xml` | `46de202` |
-| `AnkiDroid/src/main/res/values/03-dialogs.xml` | `46de202` |
-| `AnkiDroid/src/main/res/values/10-preferences.xml` | `46de202` |
-| `AnkiDroid/src/main/res/values/dimens.xml` | `46de202` |
-| `AnkiDroid/src/main/res/values/preferences.xml` | `46de202` |
-| `AnkiDroid/src/main/res/values/styles.xml` | `46de202` |
-| `AnkiDroid/src/main/res/xml/preferences_sync.xml` | `46de202` |
-| `AnkiDroid/src/test/java/com/ichi2/anki/deckpicker/StudyCountsTest.kt` | **new** — `46de202` |
-| `AnkiDroid/src/test/java/com/ichi2/anki/deckpicker/SyncDisabledTest.kt` | **new** — `46de202` |
-| `AnkiDroid/src/test/java/com/ichi2/anki/widgets/DeckAdapterTest.kt` | **new** — `46de202` |
-| `AnkiDroid/src/test/java/com/ichi2/anki/preferences/PrefsSearchBarTest.kt` | `c93f020` |
-| `libanki/src/main/java/com/ichi2/anki/libanki/Media.kt` | `4771602` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/DeckPicker.kt` | `6e6580e`, `be110f2` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/Reviewer.kt` | `15e0088` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/Sync.kt` | `d1785b5` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/DayRolloverHandler.kt` | `d1785b5` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/account/LoggedInFragment.kt` | `55c4a2a` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/account/LoggedInViewModel.kt` | `55c4a2a` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/account/LoginViewModel.kt` | `55c4a2a` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/analytics/AnalyticsConstants.kt` | `6e6580e` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/browser/BrowserColumnSelectionFragment.kt` | `ae4a80b` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/browser/CardBrowserViewModel.kt` | `c5b4283` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/cardviewer/CardMediaPlayer.kt` | `15e0088` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/cardviewer/TypeAnswer.kt` | `15e0088` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/deckpicker/DeckPickerViewModel.kt` | `6e6580e` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/deckpicker/StudyCounts.kt` | **new** — `6e6580e` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/introduction/SetupCollectionFragment.kt` | `6e6580e` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/pages/AnkiServer.kt` | `0da2e6f` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/preferences/AppearanceSettingsFragment.kt` | `37b6e6e` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/preferences/SyncSettingsFragment.kt` | `6e6580e` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/preferences/reviewer/ReviewerMenuSettingsFragment.kt` | `37b6e6e` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/provider/CardContentProvider.kt` | `ae4a80b` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/reviewer/AnswerTimer.kt` | `15e0088` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/reviewreminders/ScheduleRemindersAdapter.kt` | `ae4a80b` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/services/NotificationService.kt` | `0da2e6f` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/settings/Prefs.kt` | `6e6580e` |
+| `AnkiDroid/src/main/java/com/ichi2/anki/widgets/DeckAdapter.kt` | `6e6580e`, `be110f2` |
+| `AnkiDroid/src/main/java/com/ichi2/utils/FileUtil.kt` | `0da2e6f` |
+| `AnkiDroid/src/main/java/com/ichi2/widget/AnkiDroidWidgetSmall.kt` | `0da2e6f` |
+| `AnkiDroid/src/main/java/com/ichi2/widget/DayRolloverAlarm.kt` | `d1785b5` |
+| `AnkiDroid/src/main/res/layout/include_deck_picker.xml` | `6e6580e` |
+| `AnkiDroid/src/main/res/layout/item_deck.xml` | `6e6580e` |
+| `AnkiDroid/src/main/res/menu/study_options_fragment.xml` | `be110f2` |
+| `AnkiDroid/src/main/res/values-sw600dp/dimens.xml` | `6e6580e` |
+| `AnkiDroid/src/main/res/values/01-core.xml` | `6e6580e` |
+| `AnkiDroid/src/main/res/values/03-dialogs.xml` | `6e6580e` |
+| `AnkiDroid/src/main/res/values/10-preferences.xml` | `6e6580e` |
+| `AnkiDroid/src/main/res/values/dimens.xml` | `6e6580e` |
+| `AnkiDroid/src/main/res/values/preferences.xml` | `6e6580e` |
+| `AnkiDroid/src/main/res/values/styles.xml` | `6e6580e` |
+| `AnkiDroid/src/main/res/xml/preferences_sync.xml` | `6e6580e` |
+| `AnkiDroid/src/test/java/com/ichi2/anki/deckpicker/StudyCountsTest.kt` | **new** — `6e6580e` |
+| `AnkiDroid/src/test/java/com/ichi2/anki/deckpicker/SyncDisabledTest.kt` | **new** — `6e6580e` |
+| `AnkiDroid/src/test/java/com/ichi2/anki/widgets/DeckAdapterTest.kt` | **new** — `6e6580e` |
+| `AnkiDroid/src/test/java/com/ichi2/anki/preferences/PrefsSearchBarTest.kt` | `37b6e6e` |
+| `libanki/src/main/java/com/ichi2/anki/libanki/Media.kt` | `0da2e6f` |
 | `CLAUDE.md` | doc commits — adds the soft-fork rules to upstream's file |
 | `.github/workflows/stale.yml` | `ci` commit — adds a repository guard |
 | `.github/workflows/fork_sync_main.yml` | **new** — `ci` commit |
