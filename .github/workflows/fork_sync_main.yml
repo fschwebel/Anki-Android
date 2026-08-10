@@ -1,0 +1,43 @@
+# Fork-only. Keeps `main` a pristine mirror of upstream so the patch series always has a clean
+# base to rebase onto. See FORK.md.
+name: 🔄 Fork - sync main with upstream
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fork-sync-main
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    # Never run in upstream, in case a commit of ours is ever sent there.
+    if: github.repository != 'ankidroid/Anki-Android'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/ankidroid/Anki-Android.git
+          git fetch --no-tags upstream main
+
+      - name: Report drift
+        run: |
+          echo "origin/main   $(git rev-parse --short origin/main)"
+          echo "upstream/main $(git rev-parse --short upstream/main)"
+          echo "behind by $(git rev-list --count origin/main..upstream/main) commit(s)"
+
+      - name: Fast-forward main
+        # `main` is a mirror that is never committed to, so this is always a fast-forward.
+        # git refuses a non-fast-forward push, and that failure is the useful signal: it means
+        # something landed on the mirror that a human needs to look at.
+        run: git push origin refs/remotes/upstream/main:refs/heads/main

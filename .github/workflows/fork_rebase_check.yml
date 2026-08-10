@@ -1,0 +1,128 @@
+# Fork-only. Tells us the day upstream lands something our patch series cannot absorb.
+#
+# This deliberately does NOT push anything. Rebasing the series means force-pushing it, and a bot
+# resolving conflicts inside our own commits is how work disappears quietly. The rebase happens on
+# a throwaway ref purely to find out whether it still applies and still passes. See FORK.md.
+name: 🔀 Fork - rebase dry run
+
+on:
+  schedule:
+    - cron: "41 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: fork-rebase-check
+  cancel-in-progress: true
+
+env:
+  FORK_BRANCH: claude/repo-bugs-anki-ui-x47zjy
+  UPSTREAM: https://github.com/ankidroid/Anki-Android.git
+  ISSUE_TITLE: "Fork no longer rebases cleanly onto upstream"
+
+jobs:
+  rebase-check:
+    if: github.repository != 'ankidroid/Anki-Android'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout the patch series
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ env.FORK_BRANCH }}
+          fetch-depth: 0
+
+      - name: Fetch upstream
+        id: upstream
+        run: |
+          git remote add upstream "$UPSTREAM"
+          git fetch --no-tags upstream main
+          base=$(git merge-base HEAD upstream/main)
+          if [ "$base" = "$(git rev-parse upstream/main)" ]; then
+            echo "Already based on the current upstream/main; nothing to check."
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "upstream/main has $(git rev-list --count "$base"..upstream/main) new commit(s)"
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Rebase onto upstream/main
+        id: rebase
+        if: steps.upstream.outputs.needed == 'true'
+        run: |
+          git config user.name "fork-rebase-check"
+          git config user.email "fork-rebase-check@users.noreply.github.com"
+          git checkout -B rebase-dry-run
+          if git rebase upstream/main; then
+            echo "The patch series still applies."
+          else
+            {
+              echo "### Conflicting files"
+              echo '```'
+              git diff --name-only --diff-filter=U
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            git rebase --abort || true
+            exit 1
+          fi
+
+      - name: Configure JDK
+        if: steps.upstream.outputs.needed == 'true'
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: "jetbrains"
+          java-version: "21"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Gradle
+        if: steps.upstream.outputs.needed == 'true'
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        timeout-minutes: 10
+        with:
+          cache-provider: basic
+          cache-read-only: true
+
+      - name: Lint and test the rebased series
+        if: steps.upstream.outputs.needed == 'true'
+        # A UTF-8 locale is required: one test name is non-ASCII and Gradle's HTML report generator
+        # fails the build under a POSIX locale even when every test passed.
+        env:
+          LANG: C.UTF-8
+          LC_ALL: C.UTF-8
+        run: |
+          ./gradlew lintAll ktLintCheck
+          ./gradlew :AnkiDroid:testPlayDebugUnitTest :libanki:testDebugUnitTest
+
+      - name: Open or update an issue on failure
+        if: failure() && steps.upstream.outputs.needed == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const title = process.env.ISSUE_TITLE
+            const body = [
+              `\`${process.env.FORK_BRANCH}\` no longer rebases cleanly onto \`upstream/main\`, or`,
+              'the rebased series fails lint or tests.',
+              '',
+              `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              '',
+              'Nothing was pushed. Resolve it locally with the procedure in FORK.md, and remember',
+              'that a conflict is often a sign upstream fixed the same defect — in which case drop',
+              'our commit rather than resolving it, and update DIVERGENCE.md.',
+            ].join('\n')
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo, state: 'open', labels: 'fork-sync',
+            })
+            const open = existing.data.find(i => i.title === title)
+            if (open) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo, issue_number: open.number, body,
+              })
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo, title, body, labels: ['fork-sync'],
+              })
+            }

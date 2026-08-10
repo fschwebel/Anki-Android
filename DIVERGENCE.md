@@ -10,18 +10,23 @@ See [FORK.md](FORK.md) for the branch layout and the rebase procedure.
 
 | | |
 | --- | --- |
-| Upstream base | `68e56cb` (`upstream/main`) |
+| Upstream base | `68e56cb` — the merge base, not necessarily current `upstream/main` |
 | Fork head | tip of `claude/repo-bugs-anki-ui-x47zjy` |
-| Commits ahead | 13 (1 fork-only feature, 8 upstreamable fixes, 4 fork docs) |
-| Diff | 47 files, +1084 −90 |
-| Files shared with upstream | 34 (the rest are new files, which cannot conflict) |
+| Commits ahead | 14 (1 fork-only feature, 8 upstreamable fixes, 4 fork docs, 1 CI) |
+| Diff | 50 files, +1301 −90 |
+| Files shared with upstream | 42 of those 50 (the other 8 are new files, which cannot conflict) |
 
-Refresh the mechanical numbers above with:
+Refresh the mechanical numbers above with — note the **merge base**, not `upstream/main`. Once
+upstream moves ahead, `upstream/main..HEAD` also counts *undoing* upstream's new commits, and the
+totals balloon into nonsense:
 
 ```sh
 git fetch upstream main
-git diff --stat upstream/main..HEAD | tail -1
-git log --oneline upstream/main..HEAD
+BASE=$(git merge-base HEAD upstream/main)
+git diff --stat "$BASE"..HEAD | tail -1
+git log --oneline "$BASE"..HEAD | wc -l
+# files that exist upstream, i.e. the ones that can actually conflict
+git diff --name-only "$BASE"..HEAD | while read -r f; do git cat-file -e "$BASE:$f" 2>/dev/null && echo "$f"; done | wc -l
 ```
 
 ## Behaviour a user can see
@@ -53,6 +58,7 @@ this fork once it lands upstream** — that is how the fork stays small.
 | `c93f020` | upstreamable | preferences: dropped disabled action, invalid theme value, order-dependent test | not submitted |
 | `4667abd` | upstreamable | column dialog state, recycled reminder rows, deck provider columns | not submitted |
 | _(doc commits)_ | fork-only | `FORK.md`, `DIVERGENCE.md`, and the `CLAUDE.md` soft-fork rules | n/a |
+| _(ci commit)_ | fork-only | upstream-sync + rebase-check workflows, and a fork guard on `stale.yml` | n/a |
 
 ## File index
 
@@ -106,12 +112,15 @@ drop. Files marked **new** are added by the fork and cannot conflict.
 | `AnkiDroid/src/test/java/com/ichi2/anki/preferences/PrefsSearchBarTest.kt` | `c93f020` |
 | `libanki/src/main/java/com/ichi2/anki/libanki/Media.kt` | `4771602` |
 | `CLAUDE.md` | doc commits — adds the soft-fork rules to upstream's file |
+| `.github/workflows/stale.yml` | `ci` commit — adds a repository guard |
+| `.github/workflows/fork_sync_main.yml` | **new** — `ci` commit |
+| `.github/workflows/fork_rebase_check.yml` | **new** — `ci` commit |
 | `FORK.md`, `DIVERGENCE.md` | **new** — fork-only |
 
 Regenerate this mapping with:
 
 ```sh
-for c in $(git rev-list --reverse upstream/main..HEAD); do
+for c in $(git rev-list --reverse "$(git merge-base HEAD upstream/main)"..HEAD); do
   git log -1 --format='%h %s' "$c"
   git diff-tree --no-commit-id --name-only -r "$c" | sed 's/^/    /'
 done
@@ -181,6 +190,40 @@ is fine for a personal sideload but means the build is not authenticated to anyo
 key, set `KEYSTOREPATH` / `KEYSTOREPWD` / `KEYALIAS` / `KEYPWD` — and do it *before* the first
 install, since Android will not let you swap signing keys on an installed app without uninstalling
 it and losing its data.
+
+## Continuous integration
+
+The fork inherits all 16 of upstream's workflows. Two were added and one was guarded.
+
+**Added** (new files, so they cannot conflict; both refuse to run in `ankidroid/Anki-Android`):
+
+- `.github/workflows/fork_sync_main.yml` — daily, fast-forwards `main` to `upstream/main`. Uses
+  `git push origin refs/remotes/upstream/main:refs/heads/main`, which git refuses unless it is a
+  fast-forward; that refusal is the signal that someone committed to the mirror.
+- `.github/workflows/fork_rebase_check.yml` — daily, rebases the patch series onto `upstream/main`
+  on a throwaway ref, runs `lintAll ktLintCheck` and the unit tests, and opens (or comments on) a
+  `fork-sync` issue when either fails. **It pushes nothing.** Rebasing the series means
+  force-pushing it, and a bot resolving conflicts inside our own commits is how work disappears.
+  It skips the expensive part when the series is already based on current upstream. Change
+  `FORK_BRANCH` in its `env:` block if the branch is renamed.
+
+**Guarded**: `stale.yml` runs hourly with no repository check and closes issues and pull requests
+using upstream's timings and exempt labels. It now carries `if: github.repository ==
+'ankidroid/Anki-Android'`. This is the one upstream workflow worth the divergence — it destroys
+things rather than merely wasting minutes.
+
+**Left alone**, because a one-line guard each is not worth 6 more conflict points:
+
+| Workflow | Trigger | Effect in a fork |
+| --- | --- | --- |
+| `codeql.yml`, `screenshot_store.yml`, `screenshot_compare.yml` | push, PR | burn Actions minutes |
+| `assignees.yml`, `label.yml`, `milestone.yml` | `pull_request_target` | apply upstream's assignees, labels and milestones |
+| `conflict.yaml` | push (cron is guarded) | labels PRs |
+| `lint.yml`, `tests_unit.yml`, `tests_emulator.yml` | push, PR | genuinely useful here — keep |
+
+Disable the unwanted ones per-workflow under **Settings → Actions**, which costs no divergence.
+Note that GitHub disables Actions on forks entirely until you opt in, so none of this runs until
+you do.
 
 ## Deliberately not changed
 

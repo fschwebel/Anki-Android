@@ -9,6 +9,9 @@ permissions:
 
 jobs:
   stale:
+    # Fork: this closes issues and pull requests, and upstream's timings and exempt labels are not
+    # ours. Everything else inherited from upstream only wastes minutes; this one loses work.
+    if: github.repository == 'ankidroid/Anki-Android'
 
     permissions:
       issues: write  # for actions/stale to close stale issues
